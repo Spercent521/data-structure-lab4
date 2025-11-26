@@ -3,6 +3,8 @@ use colored::*;
 use std::cmp::Ordering;
 use std::collections::{BinaryHeap, HashMap};
 
+// BinaryHeap is a max-heap by default in Rust
+
 #[derive(Copy, Clone, Eq, PartialEq)]
 struct State {
     weight: u32,

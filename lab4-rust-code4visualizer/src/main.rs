@@ -2,6 +2,7 @@ use colored::*;
 use lab4_rust_code4visualizer::graph;
 use lab4_rust_code4visualizer::dfs;
 use lab4_rust_code4visualizer::prim;
+use lab4_rust_code4visualizer::dijkstra;
 use rand::Rng;
 use std::io;
 // !cargo add petgraph
@@ -74,11 +75,7 @@ fn main() {
     print_graph_info(&graph, &idx_to_city);
 
     // 2. dfs for traversal
-     
-    //    choose a root city interactively
     let root_cityname_for_dfs = choose_root_city(&idx_to_city);
-
-    //    dfs traversal from the chosen root city
     dfs::dfs(&graph, &idx_to_city, &root_cityname_for_dfs, &_city_to_idx);    
     
     // 3. prim for mst
@@ -86,7 +83,6 @@ fn main() {
     prim::prim(&graph, &idx_to_city, &root_cityname_for_prim, &_city_to_idx);
 
     // 4. dijkstra for shortest path
-
-    // just to avoid unused variable warning
-    let _ = root_cityname_for_dfs.clone();
+    let root_cityname_for_dijkstra = choose_root_city(&idx_to_city);
+    dijkstra::dijkstra(&graph, &idx_to_city, &root_cityname_for_dijkstra, &_city_to_idx);
 }
