@@ -3,6 +3,11 @@
 记录一些常用的指令/操作...
 
 ```shell
+# 先阶段一定要注意工作分支
+git checkout -
+```
+
+```shell
 cd lab4-rust-code4visualizer
 ```
 
