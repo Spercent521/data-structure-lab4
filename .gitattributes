@@ -1,0 +1,14 @@
+# Set default behavior, in case users don't have core.autocrlf set.
+# This will handle text files automatically, converting to LF on commit.
+* text=auto
+
+# Explicitly declare text files you want to always have LF line endings on commit.
+*.rs text eol=lf
+*.html text eol=lf
+*.css text eol=lf
+*.js text eol=lf
+*.md text eol=lf
+*.toml text eol=lf
+
+# Denote binary files to prevent Git from changing them.
+*.png binary
