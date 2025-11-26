@@ -1,1 +1,12 @@
 /lab4-rust-code4visualizer/target
+
+# Frontend (lab4-web-visualizer)
+lab4-web-visualizer/node_modules/
+lab4-web-visualizer/dist/
+lab4-web-visualizer/.env.local
+lab4-web-visualizer/.env.*.local
+lab4-web-visualizer/npm-debug.log*
+lab4-web-visualizer/yarn-debug.log*
+lab4-web-visualizer/yarn-error.log*
+lab4-web-visualizer/coverage/
+lab4-web-visualizer/.DS_Store
