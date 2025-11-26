@@ -3,6 +3,12 @@ use lab4_rust_code4visualizer::graph;
 use lab4_rust_code4visualizer::dfs;
 use rand::Rng;
 use std::io;
+// !cargo add petgraph
+// [Optional] Efficient Implementation of Built-in Graph Theory Algorithms in Rust
+// [Optional] https://docs.rs/petgraph/latest/petgraph/
+// [Optional] chech details with ai tools
+// use petgraph::Graph;
+// use petgraph::visit::Dfs;
 
 /// choose a root (default == random , and a input)
 /// returns the chosen city name
