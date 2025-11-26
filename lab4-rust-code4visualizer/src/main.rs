@@ -1,6 +1,7 @@
 use colored::*;
 use lab4_rust_code4visualizer::graph;
 use lab4_rust_code4visualizer::dfs;
+use lab4_rust_code4visualizer::prim;
 use rand::Rng;
 use std::io;
 // !cargo add petgraph
@@ -81,6 +82,8 @@ fn main() {
     dfs::dfs(&graph, &idx_to_city, &root_cityname_for_dfs, &_city_to_idx);    
     
     // 3. prim for mst
+    let root_cityname_for_prim = choose_root_city(&idx_to_city);
+    prim::prim(&graph, &idx_to_city, &root_cityname_for_prim, &_city_to_idx);
 
     // 4. dijkstra for shortest path
 
