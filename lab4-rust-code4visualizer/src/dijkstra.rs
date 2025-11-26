@@ -56,22 +56,28 @@ pub fn dijkstra(
     );
     for (i, &d) in dist.iter().enumerate() {
         if d == u32::MAX {
-            println!("  To {}: unreachable", idx_to_city[i]);
+            println!("  To {}: {}", idx_to_city[i].green(), "unreachable".red());
         } else {
             // Reconstruct path
-            let mut path = Vec::new();
+            let mut path_nodes = Vec::new();
             let mut current = i;
             while let Some(p) = prev[current] {
-                path.push(idx_to_city[current].clone());
+                path_nodes.push(idx_to_city[current].clone());
                 current = p;
             }
-            path.push(idx_to_city[start_node_idx].clone());
-            path.reverse();
+            path_nodes.push(idx_to_city[start_node_idx].clone());
+            path_nodes.reverse();
+
+            // Colorize the path string
+            let path_str = path_nodes.iter()
+                .map(|node| node.green().to_string())
+                .collect::<Vec<String>>()
+                .join(&" -> ".white().to_string());
 
             println!("  To {}: distance = {}, path = {}", 
-                idx_to_city[i], 
-                d, 
-                path.join(" -> ")
+                idx_to_city[i].cyan(), 
+                d.to_string().yellow(), 
+                path_str
             );
         }
     }
