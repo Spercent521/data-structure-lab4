@@ -8,6 +8,7 @@ pub struct Edge {
 }
 
 // Represents the graph using an adjacency list
+// node 0 : (Beijing): [Edge{to:1, weight:750}, Edge{to:2, weight:800}, Edge{to:3, weight:1140}, Edge{to:4, weight:650}]
 pub struct Graph {
     pub adj: Vec<Vec<Edge>>,
     pub node_count: usize,

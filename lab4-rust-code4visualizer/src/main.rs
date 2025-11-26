@@ -1,20 +1,83 @@
+use colored::*;
 use lab4_rust_code4visualizer::graph;
+use lab4_rust_code4visualizer::dfs;
+use rand::Rng;
+use std::io;
+
+/// choose a root (default == random , and a input)
+/// returns the chosen city name
+fn choose_root_city(idx_to_city: &Vec<String>) -> String {
+    let mut rng = rand::thread_rng();
+    let random_number: usize = rng.gen_range(0..10);
+    let default_input = idx_to_city[random_number].clone();     // clone is a must
+    
+    println!("{} choose a root to start DFS traversal (using default root {} by ENTER):",
+        "[Interaction]".bright_cyan(),
+        default_input.cyan()
+    );
+
+    let mut user_input = String::new();
+
+    let waring_info = format!("{} select a root city failed", "[Error]".red());
+
+    io::stdin().read_line(&mut user_input).expect(&waring_info);
+
+    let input = if user_input.trim().is_empty() {
+        default_input
+    } else {
+        user_input.trim().to_string()
+    };
+
+    println!("{} selected root city: {}",
+        "[Info]".blue(),
+        input.cyan()
+    );
+
+    input
+}
+
+/// print info of the graph (when init)
+fn print_graph_info(graph: &graph::Graph, idx_to_city: &Vec<String>) {
+    // [Info] about the graph
+    println!("{}", format!("[Info] Graph created with {} nodes.", graph.node_count).blue());
+
+    // [Info] print the adjacency list
+    for (i, city_name) in idx_to_city.iter().enumerate() {
+        let mut neighbors_str = String::new();
+        for (j, edge) in graph.adj[i].iter().enumerate() {
+            neighbors_str.push_str(&format!("({}, {})", idx_to_city[edge.to], edge.weight));
+            if j < graph.adj[i].len() - 1 {
+                neighbors_str.push_str(", ");
+            }
+        }
+        println!("{} Neighbors of {}: {}", 
+            "[Info]".blue(), 
+            city_name, 
+            neighbors_str
+        );
+    }
+}
 
 fn main() {
-    // 现在你可以调用 create_city_graph 函数了
-    let (graph, city_to_idx, idx_to_city) = graph::create_city_graph();
+    // 1. tomography of the graph
+    //      data structure: adjacency list . we use numbers to represent cities
+    //      numbers 0 to 9 represent the cities , as in graph.rs's immutable variable 'cities'
+    let (graph, _city_to_idx, idx_to_city) = graph::create_city_graph();
 
-    // 打印一些信息来验证
-    println!("Graph created with {} nodes.", graph.node_count);
-    println!("Index of 'Beijing': {}", city_to_idx["Beijing"]);
-    println!("City at index 0: {}", idx_to_city[0]);
+    print_graph_info(&graph, &idx_to_city);
 
-    // 你还可以遍历邻接表示
-    for (i, city_name) in idx_to_city.iter().enumerate() {
-        print!("Neighbors of {}: ", city_name);
-        for edge in &graph.adj[i] {
-            print!("({}, {}) ", idx_to_city[edge.to], edge.weight);
-        }
-        println!();
-    }
+    // 2. dfs for traversal
+     
+    //    choose a root city interactively
+    let root_cityname_for_dfs = choose_root_city(&idx_to_city);
+
+    //    dfs traversal from the chosen root city
+    dfs::dfs(&graph, &idx_to_city, &root_cityname_for_dfs, &_city_to_idx);    
+    
+    // 3. prim for mst
+
+    // 4. dijkstra for shortest path
+
+    // just to avoid unused variable warning
+    let _ = root_cityname_for_dfs.clone();
 }
