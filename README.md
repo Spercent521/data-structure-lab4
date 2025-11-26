@@ -1,3 +1,21 @@
+# 便捷开发
+
+记录一些常用的指令/操作...
+
+```shell
+cd lab4-rust-code4visualizer
+```
+
+```shell
+# 进入项目目录
+cd lab4-web-visualizer
+
+# 启动开发服务器
+npm run dev
+```
+
+[http://localhost:5173/](http://localhost:5173/)
+
 # 可视化技术
 
 做可视化是非常让人头疼的一件事情 之前的一些想法都是把前端后端高强度耦合 which means `rust` 中调用前端函数 每执行一步`rust`算法就执行对应的可视化前端 这样大大提高了前端实现难度以及`rust`学习成本
@@ -47,11 +65,5 @@ lab4/
 └── README.md
 ```
 
-# 便捷开发
 
-记录一些常用的指令/操作...
-
-```shell
-cd lab4-rust-code4visualizer
-```
 
