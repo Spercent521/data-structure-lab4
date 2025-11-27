@@ -10,3 +10,10 @@ lab4-web-visualizer/yarn-debug.log*
 lab4-web-visualizer/yarn-error.log*
 lab4-web-visualizer/coverage/
 lab4-web-visualizer/.DS_Store
+
+## generate data
+lab4-web-visualizer/src/dfs_steps.json
+lab4-web-visualizer/src/prim_steps.json
+lab4-web-visualizer/src/dijkstra_steps.json
+
+# Backend (lab4-rust-code4visualizer)
