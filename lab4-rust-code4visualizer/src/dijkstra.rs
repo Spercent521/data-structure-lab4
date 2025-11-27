@@ -1,84 +1,121 @@
-use crate::graph;
+use crate::graph::{self, Visualization, VisualizationStep};
 use colored::*;
-use std::collections::HashMap;
+use std::collections::{BinaryHeap, HashMap};
+
+#[derive(Copy, Clone, Eq, PartialEq)]
+struct State {
+    cost: u32,
+    position: usize,
+}
+
+impl Ord for State {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        other.cost.cmp(&self.cost)
+    }
+}
+
+impl PartialOrd for State {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
 
 /// perform Dijkstra's algorithm on the graph starting from the given root city name
 pub fn dijkstra(
-    graph: &graph::Graph, 
-    idx_to_city: &Vec<String>, 
-    root_cityname_for_dijkstra: &String, 
-    city_to_idx: &HashMap<String, usize>
-){
-    // init
+    graph: &graph::Graph,
+    idx_to_city: &Vec<String>,
+    root_cityname_for_dijkstra: &String,
+    city_to_idx: &HashMap<String, usize>,
+) -> Visualization {
     let start_node_idx = match city_to_idx.get(root_cityname_for_dijkstra) {
         Some(&idx) => idx,
         None => {
-            println!("{} Error: Root city '{}' not found in graph.", "[Error]".red(), root_cityname_for_dijkstra);
-            return;
+            println!(
+                "{} Error: Root city '{}' not found in graph.",
+                "[Error]".red(),
+                root_cityname_for_dijkstra
+            );
+            return Visualization { steps: vec![] };
         }
     };
 
-    let mut dist = vec![u32::MAX; graph.node_count];
+    let mut visualization = Visualization { steps: vec![] };
+    let mut dist: Vec<_> = (0..graph.node_count).map(|_| u32::MAX).collect();
+    let mut pq = BinaryHeap::new();
     let mut prev = vec![None; graph.node_count];
-    let mut visited = vec![false; graph.node_count];
-    dist[start_node_idx] = 0;
 
-    let mut pq = std::collections::BinaryHeap::new();
-    pq.push((0u32, start_node_idx)); // (distance, node_index)
+    dist[start_node_idx] = 0;
+    pq.push(State {
+        cost: 0,
+        position: start_node_idx,
+    });
+
+    visualization.steps.push(VisualizationStep {
+        visited_nodes: vec![],
+        current_node: Some(start_node_idx),
+        edges_in_path: vec![],
+        candidate_edges: graph.adj[start_node_idx].iter().map(|e| (start_node_idx, e.to)).collect(),
+        explanation: format!(
+            "Starting Dijkstra's algorithm from {}",
+            idx_to_city[start_node_idx]
+        ),
+    });
+
+    let mut visited_nodes = vec![];
 
     // loop , greedy
-    while let Some((current_dist, u)) = pq.pop() {
-        let current_dist = -(current_dist as i32) as u32; // Convert back to positive
-
-        if visited[u] {
+    while let Some(State { cost, position }) = pq.pop() {
+        if cost > dist[position] {
             continue;
         }
-        visited[u] = true;
 
-        for edge in &graph.adj[u] {
-            let v = edge.to;
-            let weight = edge.weight;
-            if !visited[v] {
-                let new_dist = current_dist.saturating_add(weight);
-                if new_dist < dist[v] {
-                    dist[v] = new_dist;
-                    prev[v] = Some(u);
-                    pq.push((-(new_dist as i32) as u32, v)); // Store negative distance for max-heap
-                }
+        if !visited_nodes.contains(&position) {
+            visited_nodes.push(position);
+        }
+        
+        let mut path_edges = Vec::new();
+        for i in 0..graph.node_count {
+            if let Some(p) = prev[i] {
+                path_edges.push((p, i));
+            }
+        }
+
+        visualization.steps.push(VisualizationStep {
+            visited_nodes: visited_nodes.clone(),
+            current_node: Some(position),
+            edges_in_path: path_edges.clone(),
+            candidate_edges: graph.adj[position].iter().map(|e| (position, e.to)).collect(),
+            explanation: format!("Visiting node {}", idx_to_city[position]),
+        });
+
+        for edge in &graph.adj[position] {
+            let next = State {
+                cost: cost + edge.weight,
+                position: edge.to,
+            };
+
+            if next.cost < dist[next.position] {
+                pq.push(next);
+                dist[next.position] = next.cost;
+                prev[next.position] = Some(position);
             }
         }
     }
-
-    // Print shortest paths(results)
-    println!("{} Dijkstra's shortest paths from {}:", 
-        "[dijkstra]".blue(), 
-        root_cityname_for_dijkstra.cyan()
-    );
-    for (i, &d) in dist.iter().enumerate() {
-        if d == u32::MAX {
-            println!("  To {}: {}", idx_to_city[i].green(), "unreachable".red());
-        } else {
-            // Reconstruct path
-            let mut path_nodes = Vec::new();
-            let mut current = i;
-            while let Some(p) = prev[current] {
-                path_nodes.push(idx_to_city[current].clone());
-                current = p;
-            }
-            path_nodes.push(idx_to_city[start_node_idx].clone());
-            path_nodes.reverse();
-
-            // Colorize the path string
-            let path_str = path_nodes.iter()
-                .map(|node| node.green().to_string())
-                .collect::<Vec<String>>()
-                .join(&" -> ".white().to_string());
-
-            println!("  To {}: distance = {}, path = {}", 
-                idx_to_city[i].cyan(), 
-                d.to_string().yellow(), 
-                path_str
-            );
+    
+    let mut final_path_edges = Vec::new();
+    for i in 0..graph.node_count {
+        if let Some(p) = prev[i] {
+            final_path_edges.push((p, i));
         }
     }
+
+    visualization.steps.push(VisualizationStep {
+        visited_nodes: visited_nodes,
+        current_node: None,
+        edges_in_path: final_path_edges,
+        candidate_edges: vec![],
+        explanation: "Dijkstra's algorithm complete".to_string(),
+    });
+
+    visualization
 }

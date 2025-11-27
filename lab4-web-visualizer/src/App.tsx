@@ -1,64 +1,78 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Allotment } from 'allotment';
 import 'allotment/dist/style.css';
 import './App.css';
 import LeftSidebar from './components/LeftSidebar';
 import Visualization from './components/Visualization';
 import CodeDisplay from './components/CodeDisplay';
+import type { VisualizationData, VisualizationStep } from './types';
 
-const dfsCode = `pub fn dfs(
-    graph: &graph::Graph, 
-    idx_to_city: &Vec<String>, 
-    root_cityname_for_dfs: &String, 
-    city_to_idx: &HashMap<String, usize>
-){
-    let start_node_idx = match city_to_idx.get(root_cityname_for_dfs) {
-        Some(&idx) => idx,
-        None => {
-            println!("{} Error: Root city '{}' not found in graph.", "[Error]".red(), root_cityname_for_dfs);
-            return;
-        }
-    };
+import dfsSteps from './dfs_steps.json';
+import primSteps from './prim_steps.json';
+import dijkstraSteps from './dijkstra_steps.json';
 
+const algorithmData: { [key: string]: VisualizationData } = {
+  DFS: dfsSteps as VisualizationData,
+  PRIM: primSteps as VisualizationData,
+  DIJKSTRA: dijkstraSteps as VisualizationData,
+};
+
+const dfsCode = `pub fn dfs(graph: &Graph, start_node: usize) -> Visualization {
+    let mut visualization = Visualization::new();
     let mut visited = vec![false; graph.node_count];
-    let mut traversal_path = Vec::new();
-    let mut stack = vec![start_node_idx];
+    let mut stack = vec![start_node];
+    let mut path_edges = Vec::new();
 
-    while let Some(u) = stack.pop() {
+    while let Some(u) = stack.last().cloned() {
         if !visited[u] {
             visited[u] = true;
-            traversal_path.push(u);
+            
+            visualization.add_step(
+                visited.iter().enumerate().filter(|&(_, &v)| v).map(|(i, _)| i).collect(),
+                Some(u),
+                path_edges.clone(),
+                graph.adj[u].iter().map(|e| (u, e.to)).collect(),
+                format!("Visiting node {}", u),
+            );
 
-            for edge in graph.adj[u].iter().rev() {
+            let mut pushed = false;
+            for edge in &graph.adj[u] {
                 let v = edge.to;
                 if !visited[v] {
                     stack.push(v);
+                    path_edges.push((u, v));
+                    pushed = true;
+                    break; 
                 }
             }
+            if !pushed {
+                stack.pop();
+                path_edges.pop();
+            }
+        } else {
+            stack.pop();
+            path_edges.pop();
         }
     }
+    visualization
 }`;
 
-const primCode = `pub fn prim(
-    graph: &Graph,
-    idx_to_city: &Vec<String>,
-    root_cityname_for_prim: &String,
-    city_to_idx: &HashMap<String, usize>,
-) {
-    let start_node = match city_to_idx.get(root_cityname_for_prim) {
-        Some(&idx) => idx,
-        None => {
-            println!("Root city '{}' not found.", root_cityname_for_prim);
-            return;
-        }
-    };
-
+const primCode = `pub fn prim(graph: &Graph, start_node: usize) -> Visualization {
+    let mut visualization = Visualization::new();
     let mut pq = BinaryHeap::new();
     let mut visited = vec![false; graph.node_count];
     let mut mst_edges = Vec::new();
     let mut total_weight = 0;
 
     visited[start_node] = true;
+    visualization.add_step(
+        vec![start_node],
+        Some(start_node),
+        mst_edges.clone(),
+        graph.adj[start_node].iter().map(|e| (start_node, e.to)).collect(),
+        format!("Starting Prim's from node {}", start_node),
+    );
+
     for edge in &graph.adj[start_node] {
         pq.push(State {
             weight: edge.weight,
@@ -73,8 +87,17 @@ const primCode = `pub fn prim(
         }
 
         visited[to] = true;
-        mst_edges.push((from, to, weight));
+        mst_edges.push((from, to));
         total_weight += weight;
+
+        let candidate_edges: Vec<(usize, usize)> = pq.iter().map(|s| (s.from, s.to)).collect();
+        visualization.add_step(
+            visited.iter().enumerate().filter(|&(_, &v)| v).map(|(i, _)| i).collect(),
+            Some(to),
+            mst_edges.clone(),
+            candidate_edges,
+            format!("Adding edge ({}, {}) with weight {}", from, to, weight),
+        );
 
         if mst_edges.len() == graph.node_count - 1 {
             break;
@@ -90,29 +113,26 @@ const primCode = `pub fn prim(
             }
         }
     }
+    visualization
 }`;
 
-const dijkstraCode = `pub fn dijkstra(
-    graph: &graph::Graph, 
-    idx_to_city: &Vec<String>, 
-    root_cityname_for_dijkstra: &String, 
-    city_to_idx: &HashMap<String, usize>
-){
-    let start_node_idx = match city_to_idx.get(root_cityname_for_dijkstra) {
-        Some(&idx) => idx,
-        None => {
-            println!("{} Error: Root city '{}' not found in graph.", "[Error]".red(), root_cityname_for_dijkstra);
-            return;
-        }
-    };
-
+const dijkstraCode = `pub fn dijkstra(graph: &Graph, start_node: usize) -> Visualization {
+    let mut visualization = Visualization::new();
     let mut dist = vec![u32::MAX; graph.node_count];
     let mut prev = vec![None; graph.node_count];
     let mut visited = vec![false; graph.node_count];
-    dist[start_node_idx] = 0;
+    dist[start_node] = 0;
 
     let mut pq = std::collections::BinaryHeap::new();
-    pq.push((0u32, start_node_idx));
+    pq.push((0u32, start_node));
+
+    visualization.add_step(
+        vec![],
+        Some(start_node),
+        vec![],
+        vec![],
+        format!("Starting Dijkstra's from node {}", start_node),
+    );
 
     while let Some((current_dist, u)) = pq.pop() {
         let current_dist = -(current_dist as i32) as u32;
@@ -121,6 +141,22 @@ const dijkstraCode = `pub fn dijkstra(
             continue;
         }
         visited[u] = true;
+
+        let mut path_to_u = Vec::new();
+        let mut curr = u;
+        while let Some(p) = prev[curr] {
+            path_to_u.push((p, curr));
+            curr = p;
+        }
+        path_to_u.reverse();
+
+        visualization.add_step(
+            visited.iter().enumerate().filter(|&(_, &v)| v).map(|(i, _)| i).collect(),
+            Some(u),
+            path_to_u,
+            graph.adj[u].iter().filter(|e| !visited[e.to]).map(|e| (u, e.to)).collect(),
+            format!("Visiting node {}, current distance: {}", u, current_dist),
+        );
 
         for edge in &graph.adj[u] {
             let v = edge.to;
@@ -135,32 +171,114 @@ const dijkstraCode = `pub fn dijkstra(
             }
         }
     }
+    visualization
 }`;
 
-const algorithmCodes: { [key: string]: string } = {
+const algorithmCode: { [key: string]: string } = {
   DFS: dfsCode,
   PRIM: primCode,
   DIJKSTRA: dijkstraCode,
 };
 
 function App() {
-  const [code, setCode] = useState(algorithmCodes['DFS']);
+  const [selectedAlgorithm, setSelectedAlgorithm] = useState('DFS');
+  const [visualization, setVisualization] = useState<VisualizationData>(algorithmData[selectedAlgorithm]);
+  const [stepIndex, setStepIndex] = useState(0);
+  const [currentStep, setCurrentStep] = useState<VisualizationStep | null>(visualization.steps[0] || null);
+  const [isPlaying, setIsPlaying] = useState(false);
 
-  const handleAlgorithmChange = (algo: string) => {
-    setCode(algorithmCodes[algo]);
+  useEffect(() => {
+    const data = algorithmData[selectedAlgorithm];
+    setVisualization(data);
+    setStepIndex(0);
+    setCurrentStep(data.steps[0] || null);
+    setIsPlaying(false);
+  }, [selectedAlgorithm]);
+
+  useEffect(() => {
+    let interval: number | undefined;
+    if (isPlaying && stepIndex < visualization.steps.length - 1) {
+      interval = setInterval(() => {
+        setStepIndex(prevIndex => {
+          const nextIndex = prevIndex + 1;
+          if (nextIndex < visualization.steps.length) {
+            setCurrentStep(visualization.steps[nextIndex]);
+            return nextIndex;
+          } else {
+            setIsPlaying(false);
+            return prevIndex;
+          }
+        });
+      }, 1000);
+    } else if (isPlaying && stepIndex >= visualization.steps.length - 1) {
+      setIsPlaying(false);
+    }
+    return () => clearInterval(interval);
+  }, [isPlaying, stepIndex, visualization]);
+
+  const handleSelectAlgorithm = (algo: string) => {
+    setSelectedAlgorithm(algo);
+  };
+
+  const handlePlay = () => {
+    if (stepIndex >= visualization.steps.length - 1) {
+      setStepIndex(0);
+      setCurrentStep(visualization.steps[0]);
+    }
+    setIsPlaying(!isPlaying);
+  };
+
+  const handleNext = () => {
+    if (stepIndex < visualization.steps.length - 1) {
+      const nextIndex = stepIndex + 1;
+      setStepIndex(nextIndex);
+      setCurrentStep(visualization.steps[nextIndex]);
+      setIsPlaying(false);
+    }
+  };
+
+  const handlePrev = () => {
+    if (stepIndex > 0) {
+      const prevIndex = stepIndex - 1;
+      setStepIndex(prevIndex);
+      setCurrentStep(visualization.steps[prevIndex]);
+      setIsPlaying(false);
+    }
+  };
+
+  const handleReset = () => {
+    setStepIndex(0);
+    setCurrentStep(visualization.steps[0]);
+    setIsPlaying(false);
   };
 
   return (
-    <div className="app">
+    <div className="App">
       <Allotment>
-        <Allotment.Pane>
-          <LeftSidebar setSelectedAlgorithm={handleAlgorithmChange} />
+        <Allotment.Pane minSize={200} maxSize={400}>
+          <LeftSidebar
+            algorithms={['DFS', 'PRIM', 'DIJKSTRA']}
+            selectedAlgorithm={selectedAlgorithm}
+            onSelectAlgorithm={handleSelectAlgorithm}
+            onPlay={handlePlay}
+            onNext={handleNext}
+            onPrev={handlePrev}
+            onReset={handleReset}
+            isPlaying={isPlaying}
+          />
         </Allotment.Pane>
         <Allotment.Pane>
-          <Visualization />
-        </Allotment.Pane>
-        <Allotment.Pane>
-          <CodeDisplay code={code} />
+          <Allotment vertical>
+            <Allotment.Pane>
+              <Visualization currentStep={currentStep} />
+            </Allotment.Pane>
+            <Allotment.Pane>
+              <CodeDisplay
+                code={algorithmCode[selectedAlgorithm]}
+                explanation={currentStep?.explanation}
+              />
+            </Allotment.Pane>
+          </Allotment>
         </Allotment.Pane>
       </Allotment>
     </div>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import ReactFlow, {
   addEdge,
   useNodesState,
@@ -8,6 +8,7 @@ import ReactFlow, {
 } from 'reactflow';
 import type { Connection, Edge, Node } from 'reactflow';
 import 'reactflow/dist/style.css';
+import type { VisualizationStep } from '../types';
 
 import './Visualization.css';
 
@@ -22,6 +23,14 @@ const nodeStyle = {
   background: '#1a1a1a',
   color: '#fff',
 };
+
+const cityIdMap: { [key: string]: number } = {
+  "Beijing": 0, "Shenyang": 1, "Qingdao": 2, "Xian": 3, "Zhengzhou": 4,
+  "Wuhan": 5, "Chengdu": 6, "Chongqing": 7, "Changsanjiao": 8, "Zhusanjiao": 9,
+};
+
+// const idToCityMap = Object.fromEntries(Object.entries(cityIdMap).map(([key, value]) => [value, key]));
+
 
 const initialNodes: Node[] = [
   { id: 'Beijing', style: nodeStyle, position: { x: 450, y: 150 }, data: { label: 'Beijing' }, sourcePosition: Position.Bottom, targetPosition: Position.Top },
@@ -56,9 +65,53 @@ const initialEdges: Edge[] = [
   { id: 'e-zhusanjiao-changsanjiao', source: 'Zhusanjiao', target: 'Changsanjiao', label: '2600' },
 ];
 
-const Visualization = () => {
-  const [nodes, , onNodesChange] = useNodesState(initialNodes);
+interface VisualizationProps {
+  currentStep: VisualizationStep | null;
+}
+
+const Visualization: React.FC<VisualizationProps> = ({ currentStep }) => {
+  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+
+  useEffect(() => {
+    if (currentStep) {
+      const newNodes = initialNodes.map(node => {
+        const isVisited = currentStep.visited_nodes.includes(cityIdMap[node.id]);
+        const isCurrent = currentStep.current_node === cityIdMap[node.id];
+        return {
+          ...node,
+          style: {
+            ...node.style,
+            background: isCurrent ? '#ff0072' : (isVisited ? '#00ff00' : '#1a1a1a'),
+          },
+        };
+      });
+      setNodes(newNodes);
+
+      const newEdges = initialEdges.map(edge => {
+        const sourceId = cityIdMap[edge.source!];
+        const targetId = cityIdMap[edge.target!];
+        const isInPath = currentStep.edges_in_path.some(
+          ([from, to]) => (from === sourceId && to === targetId) || (from === targetId && to === sourceId)
+        );
+        const isCandidate = currentStep.candidate_edges.some(
+          ([from, to]) => (from === sourceId && to === targetId) || (from === targetId && to === sourceId)
+        );
+        return {
+          ...edge,
+          animated: isCandidate,
+          style: {
+            ...edge.style,
+            stroke: isInPath ? '#ff0072' : (isCandidate ? '#00ff00' : '#ffffff'),
+          },
+        };
+      });
+      setEdges(newEdges);
+    } else {
+      setNodes(initialNodes);
+      setEdges(initialEdges);
+    }
+  }, [currentStep, setNodes, setEdges]);
 
   const onConnect = React.useCallback(
     (params: Edge | Connection) => setEdges((eds: Edge[]) => addEdge(params, eds)),

@@ -5,9 +5,10 @@ import './CodeDisplay.css';
 
 interface CodeDisplayProps {
   code: string;
+  explanation?: string;
 }
 
-const CodeDisplay: React.FC<CodeDisplayProps> = ({ code }) => {
+const CodeDisplay: React.FC<CodeDisplayProps> = ({ code, explanation }) => {
   return (
     <div className="code-display">
       <SyntaxHighlighter
@@ -17,7 +18,7 @@ const CodeDisplay: React.FC<CodeDisplayProps> = ({ code }) => {
         wrapLines={true}
         customStyle={{
           width: '100%',
-          height: '100%',
+          height: 'calc(100% - 40px)',
           backgroundColor: '#1a1a1a',
           margin: 0,
         }}
@@ -29,6 +30,7 @@ const CodeDisplay: React.FC<CodeDisplayProps> = ({ code }) => {
       >
         {code}
       </SyntaxHighlighter>
+      {explanation && <div className="explanation">{explanation}</div>}
     </div>
   );
 };
