@@ -1,74 +1,61 @@
-# 便捷开发
+# Graph Algorithm Visualizer
 
-记录一些常用的指令/操作...
+This project is an interactive tool for visualizing common graph algorithms, including Depth-First Search (DFS), Prim's algorithm for Minimum Spanning Trees, and Dijkstra's algorithm for shortest paths.
 
-```shell
-# 先阶段一定要注意工作分支
-git checkout -
-```
+The backend is built with Rust, which runs the algorithms and generates step-by-step visualization data. The frontend is a React application that reads this data and provides a dynamic, animated visualization of the algorithms' execution.
+
+# Screenshot
+
+![image-20251127221049542](./README_pic/image-20251127221049542.png)
+
+# Features
+
+- **Algorithm Selection**: Easily switch between DFS, Prim, and Dijkstra algorithms.
+- **Interactive Playback**: Control the visualization with play, pause, next, previous, and reset buttons.
+- **Graph Visualization**: A clear representation of the graph, with nodes and edges that change color to reflect the current state of the algorithm.
+- **Code Display**: See the underlying Rust code for the selected algorithm.
+- **Step-by-Step Explanation**: Understand what's happening at each step with a clear textual explanation.
+
+# How to Run
+
+To get the visualizer running, you need to first generate the algorithm data with the Rust backend, and then start the React frontend.
+
+### 1. Generate Algorithm Data (Backend)
+
+Navigate to the Rust project directory and run the application:
 
 ```shell
 cd lab4-rust-code4visualizer
+cargo run
 ```
 
-```shell
-# 进入项目目录
-cd lab4-web-visualizer
+This command will execute the graph algorithms and create three JSON files (`dfs_steps.json`, `prim_steps.json`, `dijkstra_steps.json`) inside the `lab4-web-visualizer/src` directory.
 
-# 启动开发服务器
+### 2. Start the Visualizer (Frontend)
+
+Navigate to the web visualizer directory, install the dependencies, and start the development server:
+
+```shell
+cd lab4-web-visualizer
+npm install
 npm run dev
 ```
 
-[http://localhost:5173/](http://localhost:5173/)
+Once the server is running, you can open your browser and go to [http://localhost:5173](http://localhost:5173) to use the application.
 
-# 可视化技术
+# How to Use
 
-做可视化是非常让人头疼的一件事情 之前的一些想法都是把前端后端高强度耦合 which means `rust` 中调用前端函数 每执行一步`rust`算法就执行对应的可视化前端 这样大大提高了前端实现难度以及`rust`学习成本
+**Important**: Before using the visualizer, make sure you have generated the latest algorithm data by following the steps in the "How to Run" section (specifically, running `cargo run` in the backend directory).
 
-更关键的是 这样对AI很不友好 AI很难同时处理好多种语言 `multi-end` 的代码任务 . 离开AI和CPP 我的`rust`难以支撑 .
+1.  **Select an Algorithm**: Use the list on the left sidebar to choose which algorithm you want to visualize (DFS, PRIM, or DIJKSTRA).
+2.  **Control Playback**: Use the control buttons (`Prev`, `Play`/`Pause`, `Next`, `Reset`) to navigate through the algorithm's steps at your own pace.
+3.  **Observe the Visualization**: The central panel displays the graph. Nodes and edges will be highlighted to show:
+    -   **Current Node**: The node currently being processed (typically colored pink).
+    -   **Visited Nodes**: Nodes that have already been visited (colored green).
+    -   **Edges in Path**: Edges that are part of the final path or tree (colored pink).
+    -   **Candidate Edges**: Edges being considered by the algorithm (animated/glowing green).
+4.  **Review the Code and Explanation**: The bottom panel shows the Rust code for the selected algorithm and a text description of the current visualization step.
 
--   现在决定仿照 [algorithm-visualizer.org](https://algorithm-visualizer.org/) 的模式 如下图所示
-    -   **算法技术栈** : 使用纯`rust`实现图论算法 仅用前端做可视化展示
-    -   **前端技术栈** : `Vanilla JavaScript` + `HTML5 Canvas`
-
-![image-20251125230046781](./README_pic/image-20251125230046781.png)
-
-这样可以将任务彻底分离 便于AI , Actually
-
-# 架构
-```text
-lab4/
-├── lab4-rust-code4visualizer/           # 💻 Rust算法库 仅实现算法
-│   ├── Cargo.toml
-│   └── src/
-│       ├── lib.rs
-│       ├── graph.rs           # Rust的图数据结构实现
-│       ├── dfs.rs
-│       ├── prim.rs
-│       └── dijkstra.rs
-|
-├── lab4-web-visualizer/       # 🎨 Web可视化 (Vanilla JS + HTML5 Canvas)
-│   ├── index.html             # 主目录页 (导航到各个算法页面)
-│   ├── dfs.html               # DFS可视化页面
-│   ├── prim.html              # Prim可视化页面
-│   ├── dijkstra.html          # Dijkstra可视化页面
-│
-│   ├── css/
-│   │   └── style.css          # 通用样式
-│
-│   ├── js/
-│   │   ├── common/                     # 核心通用模块
-│   │   │   ├── CanvasRenderer.js       # 负责所有图的绘制/更新逻辑
-│   │   │   ├── GraphModel.js           # 节点、边等基本图数据结构(JS实现)
-│   │   │   └── SampleData.js           # 预设的已知测试图数据
-│   │
-│   │   └── algorithms/                 # 各算法的独立逻辑实现
-│   │       ├── DFSVisualizer.js        # 包含DFS算法逻辑和可视化步骤控制
-│   │       ├── PrimVisualizer.js       # 包含Prim算法逻辑和可视化步骤控制
-│   │       └── DijkstraVisualizer.js   # 包含Dijkstra算法逻辑和可视化步骤控制
-│
-└── README.md
-```
 
 
 
