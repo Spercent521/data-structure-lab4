@@ -37,7 +37,7 @@ Navigate to the web visualizer directory, install the dependencies, and start th
 
 ```shell
 cd lab4-web-visualizer
-npm install
+# npm install # Run as administrator
 npm run dev
 ```
 
