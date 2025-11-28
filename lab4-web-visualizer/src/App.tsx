@@ -268,7 +268,7 @@ function App() {
           />
         </Allotment.Pane>
         <Allotment.Pane>
-          <Allotment vertical>
+          <Allotment vertical = {false}>
             <Allotment.Pane>
               <Visualization currentStep={currentStep} />
             </Allotment.Pane>

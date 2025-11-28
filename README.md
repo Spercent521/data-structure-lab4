@@ -6,6 +6,8 @@ The backend is built with Rust, which runs the algorithms and generates step-by-
 
 # Screenshot
 
+![image-20251128202445113](./README_pic/image-20251128202445113.png)
+
 ![image-20251127221049542](./README_pic/image-20251127221049542.png)
 
 # Features
@@ -55,7 +57,6 @@ Once the server is running, you can open your browser and go to [http://localhos
     -   **Edges in Path**: Edges that are part of the final path or tree (colored pink).
     -   **Candidate Edges**: Edges being considered by the algorithm (animated/glowing green).
 4.  **Review the Code and Explanation**: The bottom panel shows the Rust code for the selected algorithm and a text description of the current visualization step.
-
 
 
 
